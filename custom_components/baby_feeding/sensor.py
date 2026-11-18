@@ -100,6 +100,7 @@ class StatusSensor(FeedingSensor):
             'maximum_amount': state.maximum_amount,
             'night_custom_enabled': state.night_rhythm.custom_enabled,
             'night_hours': state.night_rhythm.custom_hours,
+            'night_starts_at': state.night_rhythm.starts_at.strftime('%H:%M'),
             'feeds': [{'id': feed.feed_id, 'start': _local(feed.start), 'amount': feed.amount} for feed in state.feeds if feed.start >= since],
         }
 

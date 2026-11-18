@@ -6,7 +6,7 @@ import re
 import uuid
 from collections.abc import Callable
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -109,14 +109,17 @@ class FeedingManager:
         now = dt_util.now()
         return await self._change(lambda state: diary.open_new_bottle(state, now=now))
 
-    async def async_set_settings(self, *, standard_amount: int, maximum_amount: int | None, night_custom_enabled: bool, night_hours: int) -> FeedingState:
+    async def async_set_settings(
+        self, *, standard_amount: int, maximum_amount: int | None, night_custom_enabled: bool, night_hours: int, night_starts_at: time | None = None,
+    ) -> FeedingState:
         now = dt_util.now()
 
         def change(state: FeedingState) -> FeedingState:
+            starts_at = night_starts_at or state.night_rhythm.starts_at
             try:
-                rhythm = NightRhythm(custom_enabled=night_custom_enabled, custom_hours=night_hours)
+                rhythm = NightRhythm(custom_enabled=night_custom_enabled, custom_hours=night_hours, starts_at=starts_at)
             except ValueError as error:
-                raise FeedError('invalid_night_interval') from error
+                raise FeedError('invalid_night_start' if 'starts' in str(error) else 'invalid_night_interval') from error
             with_amounts = diary.set_amounts(state, standard_amount=standard_amount, maximum_amount=maximum_amount)
             return diary.set_night_rhythm(with_amounts, night_rhythm=rhythm, now=now, time_zone=self.time_zone)
 

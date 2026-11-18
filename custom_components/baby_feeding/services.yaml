@@ -81,6 +81,9 @@ set_settings:
           step: 1
           mode: box
           unit_of_measurement: uur
+    night_starts_at:
+      selector:
+        time:
 import_calendar:
   fields:
     entity_id:

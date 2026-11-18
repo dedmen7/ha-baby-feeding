@@ -90,6 +90,9 @@
     },
     "not_loaded": {
       "message": "Babyvoeding is niet geladen."
+    },
+    "invalid_night_start": {
+      "message": "De nacht begint tussen 18:00 en 23:59."
     }
   },
   "services": {
@@ -173,6 +176,10 @@
         "night_hours": {
           "name": "Nachtinterval",
           "description": "3 tot en met 8 uur."
+        },
+        "night_starts_at": {
+          "name": "Nacht begint om",
+          "description": "Vanaf deze tijd tot 07:00 geldt het nachtinterval. Standaard 22:30, vroegst 18:00."
         }
       }
     },

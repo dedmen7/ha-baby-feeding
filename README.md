@@ -10,7 +10,7 @@ A Home Assistant integration for bottle feeding. It keeps a diary of the bottles
 
 ## Features
 
-- **Feeding rhythm** – three hours between bottles by day; bottles started between 22:30 and 07:00 use the night interval (four hours by default, or your own choice of three to eight). Intervals are elapsed hours, so daylight-saving changes are handled correctly.
+- **Feeding rhythm** – three hours between bottles by day; bottles started at night use the night interval (four hours by default, or your own choice of three to eight). The night runs from 22:30 to 07:00 by default; the start can be set between 18:00 and 23:59. Intervals are elapsed hours, so daylight-saving changes are handled correctly.
 - **One reminder per planned moment** – a critical notification on the phones you choose. Changing the settings never repeats a reminder for a moment that has already alerted.
 - **Bottles ahead** – a bottle can be saved up to 24 hours in advance; the next reminder then counts from that bottle.
 - **Diary** – add earlier feeds, change or delete feeds, and see daily and weekly totals. The diary is stored by the integration and is also shown as a read-only calendar.
@@ -42,7 +42,7 @@ Go to **Settings → Devices & services → Add integration → Baby Feeding**. 
 - **Phones for reminders** – the `notify.mobile_app_*` actions of the parents' phones.
 - **Dashboard path** – the view the reminder and the lock-screen countdown open, for example `/lovelace/baby`.
 
-Both can be changed later under **Configure**. The default amount, the agreed maximum and the night interval are set on the card's settings tab.
+Both can be changed later under **Configure**. The default amount, the agreed maximum, the night interval and the start of the night are set on the card's settings tab.
 
 ## Dashboard card
 
@@ -79,14 +79,14 @@ Entity IDs are always English; names, texts and notifications follow the Home As
 | `baby_feeding.update_feed` | Change the time or amount of a feed (`feed_id`, `start`, `amount`) |
 | `baby_feeding.delete_feed` | Remove a feed (`feed_id`) |
 | `baby_feeding.new_bottle` | Open a new bottle in the card |
-| `baby_feeding.set_settings` | Default amount, maximum and night interval |
+| `baby_feeding.set_settings` | Default amount, maximum, night interval and night start (`night_starts_at`) |
 | `baby_feeding.import_calendar` | One-time import of feeds named like `70 ml` or `70 cc` from an existing calendar, into an empty diary |
 
 Refused changes return a translated message, for example a second feed in the same minute or a bottle more than 24 hours ahead.
 
 ## Translations
 
-The card follows each user's language; the sensors, reminders and lock-screen texts follow the Home Assistant system language. English is the default and Dutch is included. Add a language by adding a table to `texts.py`, a file in `translations/` and an entry in `BABY_FEEDING_TEXT` in the card.
+The card, the sensors, reminders and lock-screen texts all follow the Home Assistant system language. English is the default and Dutch is included. Add a language by adding a table to `texts.py`, a file in `translations/` and an entry in `BABY_FEEDING_TEXT` in the card.
 
 ## Privacy
 

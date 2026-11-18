@@ -233,3 +233,18 @@ def test_the_card_url_changes_with_the_card_content() -> None:
     card = Path(__file__).parents[1] / 'custom_components' / 'baby_feeding' / 'frontend' / 'baby-feeding-card.js'
     expected = hashlib.sha256(card.read_bytes()).hexdigest()[:12]
     assert card_module_url(card) == '/baby_feeding/baby-feeding-card.js?v=' + expected
+
+
+async def test_an_earlier_night_start_turns_a_ten_oclock_bottle_into_a_night_bottle(hass: HomeAssistant, entry: MockConfigEntry, freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to(local('2026-11-18T22:05'))
+    await call(hass, 'set_settings', standard_amount=70, night_custom_enabled=True, night_hours=6)
+    await call(hass, 'save_bottle', start='2026-11-18T22:00:00+01:00', amount=70)
+    assert state(hass, 'sensor.baby_feeding_next_bottle') == '01:00'
+    await call(hass, 'set_settings', standard_amount=70, night_custom_enabled=True, night_hours=6, night_starts_at='22:00')
+    assert state(hass, 'sensor.baby_feeding_next_bottle') == '04:00'
+    assert hass.states.get('sensor.baby_feeding_status').attributes['night_starts_at'] == '22:00'
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get('sensor.baby_feeding_status').attributes['night_starts_at'] == '22:00'
+    with pytest.raises(ServiceValidationError):
+        await call(hass, 'set_settings', standard_amount=70, night_custom_enabled=True, night_hours=6, night_starts_at='12:00')

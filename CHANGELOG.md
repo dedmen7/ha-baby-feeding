@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- The start of the night is configurable (default 22:30, earliest 18:00) in the card settings and in `baby_feeding.set_settings` (`night_starts_at`). A bottle started at or after that time gets the night interval.
+- The card follows the Home Assistant system language, like the entity names and notifications, instead of the browser language.
+
 ## 0.2.1
 
 - The card URL carries a content hash, so browsers and the phone apps load the new card right after an update instead of a cached one.

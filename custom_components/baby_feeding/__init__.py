@@ -89,10 +89,11 @@ def _register_services(hass: HomeAssistant) -> None:
             vol.Optional('maximum_amount'): vol.Any(None, AMOUNT),
             vol.Required('night_custom_enabled'): cv.boolean,
             vol.Required('night_hours'): vol.All(vol.Coerce(int), vol.Range(min=3, max=8)),
+            vol.Optional('night_starts_at'): cv.time,
         }),
         lambda target, data: target.async_set_settings(
             standard_amount=data['standard_amount'], maximum_amount=data.get('maximum_amount'),
-            night_custom_enabled=data['night_custom_enabled'], night_hours=data['night_hours'],
+            night_custom_enabled=data['night_custom_enabled'], night_hours=data['night_hours'], night_starts_at=data.get('night_starts_at'),
         ),
     )
     register('import_calendar', vol.Schema({vol.Required('entity_id'): cv.entity_id}), lambda target, data: target.async_import_calendar(entity_id=data['entity_id']))

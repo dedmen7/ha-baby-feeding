@@ -1,6 +1,6 @@
 """Feeding rhythm: three hours by day, the night interval for bottles started at night, in elapsed hours."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -89,3 +89,20 @@ def test_interval_is_elapsed_time_for_a_start_in_the_local_zone() -> None:
 def test_a_start_without_time_zone_is_refused() -> None:
     with pytest.raises(ValueError):
         next_due(start=datetime(year=2026, month=11, day=14, hour=11), night_rhythm=NightRhythm(), time_zone=AMSTERDAM)
+
+
+@pytest.mark.parametrize(('given', 'hours'), [('21:59', 3), ('22:00', 6), ('22:30', 6), ('06:59', 6), ('07:00', 3)])
+def test_the_night_can_start_earlier(given: str, hours: int) -> None:
+    night_rhythm = NightRhythm(custom_enabled=True, custom_hours=6, starts_at=time(hour=22))
+    start = moment('2026-11-18T' + given + ':00+01:00')
+    assert interval_hours(start=start, night_rhythm=night_rhythm, time_zone=AMSTERDAM) == hours
+
+
+def test_the_default_night_starts_at_half_past_ten() -> None:
+    assert NightRhythm().starts_at == time(hour=22, minute=30)
+
+
+@pytest.mark.parametrize('starts_at', [time(hour=17, minute=59), time(hour=7), time(hour=12), '22:00', None])
+def test_the_night_must_start_in_the_evening(starts_at: object) -> None:
+    with pytest.raises(ValueError):
+        NightRhythm(starts_at=starts_at)

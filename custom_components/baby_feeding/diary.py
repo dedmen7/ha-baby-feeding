@@ -21,6 +21,7 @@ ERRORS = {
     'maximum_too_low': 'Enter a maximum of at least 1 or leave it empty.',
     'standard_above_maximum': 'The default amount is above the agreed maximum.',
     'invalid_night_interval': 'Choose a night interval of 3 to 8 whole hours.',
+    'invalid_night_start': 'The night starts between 18:00 and 23:59.',
     'minute_taken': 'There is already a feed in this minute. Change that feed or choose the actual start time.',
     'feed_not_found': 'This feed was moved or deleted. Refresh the overview.',
     'import_needs_empty_diary': 'Importing is only possible into an empty diary.',

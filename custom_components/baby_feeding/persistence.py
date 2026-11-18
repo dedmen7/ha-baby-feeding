@@ -1,6 +1,6 @@
 """Convert the diary state to and from the JSON stored in Home Assistant's .storage folder."""
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any
 
 from .diary import DEFAULT_STANDARD_AMOUNT, Feed, FeedingState, valid_amount
@@ -18,6 +18,7 @@ def to_stored(state: FeedingState) -> dict[str, Any]:
         'pending': None if state.pending is None else state.pending.isoformat(),
         'night_custom_enabled': state.night_rhythm.custom_enabled,
         'night_hours': state.night_rhythm.custom_hours,
+        'night_starts_at': state.night_rhythm.starts_at.strftime('%H:%M'),
         'standard_amount': state.standard_amount,
         'maximum_amount': state.maximum_amount,
     }
@@ -36,7 +37,10 @@ def from_stored(data: dict[str, Any]) -> FeedingState:
         feeds=feeds,
         plan=plan,
         pending=None if pending is None else _moment(pending),
-        night_rhythm=NightRhythm(custom_enabled=bool(data.get('night_custom_enabled', False)), custom_hours=data.get('night_hours', 4)),
+        night_rhythm=NightRhythm(
+            custom_enabled=bool(data.get('night_custom_enabled', False)), custom_hours=data.get('night_hours', 4),
+            starts_at=time.fromisoformat(data.get('night_starts_at', '22:30')),
+        ),
         standard_amount=valid_amount(data.get('standard_amount', DEFAULT_STANDARD_AMOUNT)),
         maximum_amount=None if maximum is None else valid_amount(maximum),
     )

@@ -90,6 +90,9 @@
     },
     "not_loaded": {
       "message": "Baby Feeding is not loaded."
+    },
+    "invalid_night_start": {
+      "message": "The night starts between 18:00 and 23:59."
     }
   },
   "services": {
@@ -173,6 +176,10 @@
         "night_hours": {
           "name": "Night interval",
           "description": "3 to 8 hours."
+        },
+        "night_starts_at": {
+          "name": "Night starts at",
+          "description": "From this time until 07:00 the night interval applies. Default 22:30, earliest 18:00."
         }
       }
     },

@@ -31,9 +31,9 @@ let subscriptions = 0;
 let reject = null;
 let language = 'en';
 const hass = () => ({
-  config: {time_zone: 'Europe/Amsterdam'},
-  language,
-  locale: {language},
+  config: {time_zone: 'Europe/Amsterdam', language},
+  language: 'en',
+  locale: {language: 'en'},
   states: {'sensor.baby_feeding_status': {entity_id: 'sensor.baby_feeding_status', ...structuredClone(status)}},
   connection: {subscribeEvents: async () => { subscriptions++; return () => {}; }},
   callApi: async () => feeds.map(feed => ({uid: feed.uid, summary: feed.summary, start: {dateTime: feed.start}, end: {dateTime: feed.start}})),
@@ -113,11 +113,21 @@ settingsCard.setConfig({mode: 'settings'});
 window.document.body.append(settingsCard);
 settingsCard.hass = hass();
 input(settingsCard, 'standard-amount', 80); input(settingsCard, 'maximum-amount', 90);
-settingsCard.$('night-toggle').click(); input(settingsCard, 'night-hours', 5);
-status = {...status, attributes: {...status.attributes, standard_amount: 80, maximum_amount: 90, night_custom_enabled: true, night_hours: 5}};
+settingsCard.$('night-toggle').click(); input(settingsCard, 'night-hours', 6); input(settingsCard, 'night-start', '22:00');
+assert.match(settingsCard.$('night-help').textContent, /^From 22:00 to 07:00 the next reminder follows after 6 hours/);
+status = {...status, attributes: {...status.attributes, standard_amount: 80, maximum_amount: 90, night_custom_enabled: true, night_hours: 6, night_starts_at: '22:00'}};
 await settingsCard._saveSettings();
-assert.deepEqual(actions().at(-1), ['baby_feeding.set_settings', {standard_amount: 80, maximum_amount: 90, night_custom_enabled: true, night_hours: 5}]);
+assert.deepEqual(actions().at(-1), ['baby_feeding.set_settings', {standard_amount: 80, maximum_amount: 90, night_custom_enabled: true, night_hours: 6, night_starts_at: '22:00'}]);
 assert.equal(settingsCard.$('settings-status').textContent, 'Settings saved');
+// With the night starting at 22:00 a ten o'clock bottle is a night bottle.
+card.hass = hass();
+input(card, 'current-date', '2026-11-14'); input(card, 'current-time', '22:00');
+assert.match(card.$('current-preview').textContent, /Next reminder at 04:00 on 15-11-2026 · 6 hours after this bottle\./);
+input(settingsCard, 'night-start', '12:00');
+const refusedBefore = actions().length;
+await settingsCard._saveSettings();
+assert.equal(actions().length, refusedBefore);
+assert.match(settingsCard.$('settings-error').textContent, /between 18:00 and 23:59/);
 
 // After the reminder the clock says it is time.
 now = '2026-11-14T15:31:00+01:00';
@@ -126,7 +136,7 @@ card.hass = hass();
 assert.equal(card.$('countdown').textContent, 'Time for the bottle');
 assert.equal(card.$('current-time').value, '15:30');
 
-// A Dutch user gets the Dutch translation, including refusals reported by the integration.
+// A Home Assistant set to Dutch gets the Dutch card, whatever the browser language, including refusals reported by the integration.
 language = 'nl';
 card.hass = hass();
 assert.equal(card.$('countdown').textContent, 'Tijd voor de fles');

@@ -1,4 +1,4 @@
-"""Feeding rhythm: three hours by day and the night interval for bottles started at night."""
+"""Feeding rhythm: three hours by day and the night interval for bottles started at night (from 22:30 unless set earlier)."""
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, timedelta
@@ -9,6 +9,7 @@ DEFAULT_NIGHT_INTERVAL_HOURS = 4
 MINIMUM_NIGHT_INTERVAL_HOURS = 3
 MAXIMUM_NIGHT_INTERVAL_HOURS = 8
 NIGHT_STARTS_AT = time(hour=22, minute=30)
+EARLIEST_NIGHT_START = time(hour=18)
 NIGHT_ENDS_AT = time(hour=7)
 
 
@@ -18,24 +19,27 @@ class NightRhythm:
 
     custom_enabled: bool = False
     custom_hours: int = DEFAULT_NIGHT_INTERVAL_HOURS
+    starts_at: time = NIGHT_STARTS_AT
 
     def __post_init__(self) -> None:
         whole_hours = isinstance(self.custom_hours, int) and not isinstance(self.custom_hours, bool)
         if not whole_hours or not MINIMUM_NIGHT_INTERVAL_HOURS <= self.custom_hours <= MAXIMUM_NIGHT_INTERVAL_HOURS:
             raise ValueError('Choose a night interval of 3 to 8 whole hours.')
+        if not isinstance(self.starts_at, time) or self.starts_at < EARLIEST_NIGHT_START:
+            raise ValueError('The night starts between 18:00 and 23:59.')
 
     @property
     def interval_hours(self) -> int:
         return self.custom_hours if self.custom_enabled else DEFAULT_NIGHT_INTERVAL_HOURS
 
 
-def started_at_night(*, start: datetime, time_zone: ZoneInfo) -> bool:
+def started_at_night(*, start: datetime, time_zone: ZoneInfo, starts_at: time = NIGHT_STARTS_AT) -> bool:
     local_time = _aware(start).astimezone(time_zone).time()
-    return local_time >= NIGHT_STARTS_AT or local_time < NIGHT_ENDS_AT
+    return local_time >= starts_at or local_time < NIGHT_ENDS_AT
 
 
 def interval_hours(*, start: datetime, night_rhythm: NightRhythm, time_zone: ZoneInfo) -> int:
-    at_night = started_at_night(start=start, time_zone=time_zone)
+    at_night = started_at_night(start=start, time_zone=time_zone, starts_at=night_rhythm.starts_at)
     return night_rhythm.interval_hours if at_night else DAY_INTERVAL_HOURS
 
 
