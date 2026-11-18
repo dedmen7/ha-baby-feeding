@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Babyvoeding",
+        "data": {
+          "notify_services": "Phones for reminders",
+          "dashboard_url": "Dashboard path opened by the reminder"
+        }
+      }
+    },
+    "error": {
+      "invalid_dashboard_url": "Use a path starting with a single /, for example /dashboard-main/voeding.",
+      "invalid_notify_service": "Choose notify actions that start with notify."
+    },
+    "abort": {
+      "single_instance_allowed": "Baby feeding is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Babyvoeding",
+        "data": {
+          "notify_services": "Phones for reminders",
+          "dashboard_url": "Dashboard path opened by the reminder"
+        }
+      }
+    },
+    "error": {
+      "invalid_dashboard_url": "Use a path starting with a single /, for example /dashboard-main/voeding.",
+      "invalid_notify_service": "Choose notify actions that start with notify."
+    }
+  },
+  "services": {
+    "save_bottle": {
+      "name": "Save bottle",
+      "description": "Saves a bottle; the next reminder counts from it. Up to 24 hours ahead.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": "When the bottle started."
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "Amount drunk in cc."
+        }
+      }
+    },
+    "add_earlier_feed": {
+      "name": "Add earlier feed",
+      "description": "Adds a past feed without moving the reminder.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": "When the bottle started."
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "Amount drunk in cc."
+        }
+      }
+    },
+    "update_feed": {
+      "name": "Update feed",
+      "description": "Changes the time or amount of a saved feed.",
+      "fields": {
+        "feed_id": {
+          "name": "Feed",
+          "description": "ID of the feed in the diary."
+        },
+        "start": {
+          "name": "Start",
+          "description": "When the bottle started."
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "Amount drunk in cc."
+        }
+      }
+    },
+    "delete_feed": {
+      "name": "Delete feed",
+      "description": "Removes a feed from the diary.",
+      "fields": {
+        "feed_id": {
+          "name": "Feed",
+          "description": "ID of the feed in the diary."
+        }
+      }
+    },
+    "new_bottle": {
+      "name": "New bottle",
+      "description": "Opens a new bottle to fill in.",
+      "fields": {}
+    },
+    "set_settings": {
+      "name": "Save settings",
+      "description": "Default amount, maximum and night rhythm.",
+      "fields": {
+        "standard_amount": {
+          "name": "Default amount",
+          "description": "Prefilled for a new bottle."
+        },
+        "maximum_amount": {
+          "name": "Maximum",
+          "description": "Agreed maximum per bottle, optional."
+        },
+        "night_custom_enabled": {
+          "name": "Custom night interval",
+          "description": "Off uses 4 hours between 22:30 and 07:00."
+        },
+        "night_hours": {
+          "name": "Night interval",
+          "description": "3 to 8 hours."
+        }
+      }
+    },
+    "import_calendar": {
+      "name": "Import calendar",
+      "description": "Copies feeds (\"70 cc\") once from an existing calendar. Only into an empty diary.",
+      "fields": {
+        "entity_id": {
+          "name": "Calendar",
+          "description": "The old feeding calendar."
+        }
+      }
+    }
+  }
+}

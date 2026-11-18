@@ -1,0 +1,15 @@
+{
+  "domain": "baby_feeding",
+  "name": "Babyvoeding",
+  "codeowners": ["@dedmen7"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "after_dependencies": ["frontend", "notify", "calendar"],
+  "documentation": "https://github.com/dedmen7/ha-baby-feeding",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/dedmen7/ha-baby-feeding/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}

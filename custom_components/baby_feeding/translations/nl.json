@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Babyvoeding",
+        "data": {
+          "notify_services": "Telefoons voor herinneringen",
+          "dashboard_url": "Dashboardpad voor de melding"
+        }
+      }
+    },
+    "error": {
+      "invalid_dashboard_url": "Gebruik een pad dat met één / begint, bijvoorbeeld /dashboard-main/voeding.",
+      "invalid_notify_service": "Kies meldingsacties die met notify. beginnen."
+    },
+    "abort": {
+      "single_instance_allowed": "Babyvoeding is al ingesteld."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Babyvoeding",
+        "data": {
+          "notify_services": "Telefoons voor herinneringen",
+          "dashboard_url": "Dashboardpad voor de melding"
+        }
+      }
+    },
+    "error": {
+      "invalid_dashboard_url": "Gebruik een pad dat met één / begint, bijvoorbeeld /dashboard-main/voeding.",
+      "invalid_notify_service": "Kies meldingsacties die met notify. beginnen."
+    }
+  },
+  "services": {
+    "save_bottle": {
+      "name": "Fles opslaan",
+      "description": "Slaat een gegeven fles op; de volgende herinnering telt vanaf deze fles. Tot 24 uur vooruit.",
+      "fields": {
+        "start": {
+          "name": "Begintijd",
+          "description": "Wanneer de fles begon."
+        },
+        "amount": {
+          "name": "Hoeveelheid",
+          "description": "Gedronken hoeveelheid in cc."
+        }
+      }
+    },
+    "add_earlier_feed": {
+      "name": "Eerdere voeding toevoegen",
+      "description": "Voegt een voeding uit het verleden toe zonder de herinnering te verschuiven.",
+      "fields": {
+        "start": {
+          "name": "Begintijd",
+          "description": "Wanneer de fles begon."
+        },
+        "amount": {
+          "name": "Hoeveelheid",
+          "description": "Gedronken hoeveelheid in cc."
+        }
+      }
+    },
+    "update_feed": {
+      "name": "Voeding aanpassen",
+      "description": "Past tijd of hoeveelheid van een opgeslagen voeding aan.",
+      "fields": {
+        "feed_id": {
+          "name": "Voeding",
+          "description": "ID van de voeding uit het dagboek."
+        },
+        "start": {
+          "name": "Begintijd",
+          "description": "Wanneer de fles begon."
+        },
+        "amount": {
+          "name": "Hoeveelheid",
+          "description": "Gedronken hoeveelheid in cc."
+        }
+      }
+    },
+    "delete_feed": {
+      "name": "Voeding verwijderen",
+      "description": "Verwijdert een voeding uit het dagboek.",
+      "fields": {
+        "feed_id": {
+          "name": "Voeding",
+          "description": "ID van de voeding uit het dagboek."
+        }
+      }
+    },
+    "new_bottle": {
+      "name": "Nieuwe fles",
+      "description": "Opent een nieuwe fles om in te vullen.",
+      "fields": {}
+    },
+    "set_settings": {
+      "name": "Instellingen opslaan",
+      "description": "Standaardhoeveelheid, maximum en nachtritme.",
+      "fields": {
+        "standard_amount": {
+          "name": "Standaardhoeveelheid",
+          "description": "Ingevuld bij een nieuwe fles."
+        },
+        "maximum_amount": {
+          "name": "Maximum",
+          "description": "Afgesproken maximum per fles, optioneel."
+        },
+        "night_custom_enabled": {
+          "name": "Eigen nachtinterval",
+          "description": "Uit gebruikt 4 uur tussen 22:30 en 07:00."
+        },
+        "night_hours": {
+          "name": "Nachtinterval",
+          "description": "3 tot en met 8 uur."
+        }
+      }
+    },
+    "import_calendar": {
+      "name": "Kalender importeren",
+      "description": "Neemt voedingen (\"70 cc\") eenmalig over uit een bestaande kalender. Alleen in een leeg dagboek.",
+      "fields": {
+        "entity_id": {
+          "name": "Kalender",
+          "description": "De oude voedingskalender."
+        }
+      }
+    }
+  }
+}

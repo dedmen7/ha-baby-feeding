@@ -1,0 +1,90 @@
+save_bottle:
+  fields:
+    start:
+      required: true
+      selector:
+        datetime:
+    amount:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9999
+          mode: box
+          unit_of_measurement: cc
+add_earlier_feed:
+  fields:
+    start:
+      required: true
+      selector:
+        datetime:
+    amount:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9999
+          mode: box
+          unit_of_measurement: cc
+update_feed:
+  fields:
+    feed_id:
+      required: true
+      selector:
+        text:
+    start:
+      required: true
+      selector:
+        datetime:
+    amount:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9999
+          mode: box
+          unit_of_measurement: cc
+delete_feed:
+  fields:
+    feed_id:
+      required: true
+      selector:
+        text:
+new_bottle:
+set_settings:
+  fields:
+    standard_amount:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9999
+          mode: box
+          unit_of_measurement: cc
+    maximum_amount:
+      selector:
+        number:
+          min: 1
+          max: 9999
+          mode: box
+          unit_of_measurement: cc
+    night_custom_enabled:
+      required: true
+      selector:
+        boolean:
+    night_hours:
+      required: true
+      selector:
+        number:
+          min: 3
+          max: 8
+          step: 1
+          mode: box
+          unit_of_measurement: uur
+import_calendar:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: calendar
