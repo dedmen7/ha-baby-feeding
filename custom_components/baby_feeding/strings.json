@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Babyvoeding",
+        "title": "Baby Feeding",
         "data": {
           "notify_services": "Phones for reminders",
           "dashboard_url": "Dashboard path opened by the reminder"
@@ -10,17 +10,17 @@
       }
     },
     "error": {
-      "invalid_dashboard_url": "Use a path starting with a single /, for example /dashboard-main/voeding.",
+      "invalid_dashboard_url": "Use a path that starts with a single /, for example /lovelace/0.",
       "invalid_notify_service": "Choose notify actions that start with notify."
     },
     "abort": {
-      "single_instance_allowed": "Baby feeding is already set up."
+      "single_instance_allowed": "Baby Feeding is already set up."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Babyvoeding",
+        "title": "Baby Feeding",
         "data": {
           "notify_services": "Phones for reminders",
           "dashboard_url": "Dashboard path opened by the reminder"
@@ -28,8 +28,68 @@
       }
     },
     "error": {
-      "invalid_dashboard_url": "Use a path starting with a single /, for example /dashboard-main/voeding.",
+      "invalid_dashboard_url": "Use a path that starts with a single /, for example /lovelace/0.",
       "invalid_notify_service": "Choose notify actions that start with notify."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_feeding": {
+        "name": "Next feeding"
+      },
+      "next_bottle": {
+        "name": "Next bottle"
+      },
+      "progress": {
+        "name": "Feeding progress"
+      },
+      "status": {
+        "name": "Feeding status",
+        "state": {
+          "open": "Bottle open",
+          "saved": "Saved"
+        }
+      }
+    },
+    "calendar": {
+      "diary": {
+        "name": "Feeding diary"
+      }
+    }
+  },
+  "exceptions": {
+    "bottle_too_far_ahead": {
+      "message": "Choose a start time no more than 24 hours ahead."
+    },
+    "earlier_feed_in_future": {
+      "message": "An earlier feed must already have happened. Save a bottle ahead with the bottle form."
+    },
+    "only_planned_bottle_ahead": {
+      "message": "Choose a time that has passed. Only the last saved bottle can be set ahead."
+    },
+    "invalid_amount": {
+      "message": "Enter a whole amount between 0 and 9999."
+    },
+    "maximum_too_low": {
+      "message": "Enter a maximum of at least 1 or leave it empty."
+    },
+    "standard_above_maximum": {
+      "message": "The default amount is above the agreed maximum."
+    },
+    "invalid_night_interval": {
+      "message": "Choose a night interval of 3 to 8 whole hours."
+    },
+    "minute_taken": {
+      "message": "There is already a feed in this minute. Change that feed or choose the actual start time."
+    },
+    "feed_not_found": {
+      "message": "This feed was moved or deleted. Refresh the overview."
+    },
+    "import_needs_empty_diary": {
+      "message": "Importing is only possible into an empty diary."
+    },
+    "not_loaded": {
+      "message": "Baby Feeding is not loaded."
     }
   },
   "services": {
@@ -43,7 +103,7 @@
         },
         "amount": {
           "name": "Amount",
-          "description": "Amount drunk in cc."
+          "description": "Amount drunk in ml (cc)."
         }
       }
     },
@@ -57,7 +117,7 @@
         },
         "amount": {
           "name": "Amount",
-          "description": "Amount drunk in cc."
+          "description": "Amount drunk in ml (cc)."
         }
       }
     },
@@ -75,7 +135,7 @@
         },
         "amount": {
           "name": "Amount",
-          "description": "Amount drunk in cc."
+          "description": "Amount drunk in ml (cc)."
         }
       }
     },
@@ -118,11 +178,11 @@
     },
     "import_calendar": {
       "name": "Import calendar",
-      "description": "Copies feeds (\"70 cc\") once from an existing calendar. Only into an empty diary.",
+      "description": "Copies feeds named like \"70 ml\" or \"70 cc\" once from an existing calendar. Only into an empty diary.",
       "fields": {
         "entity_id": {
           "name": "Calendar",
-          "description": "The old feeding calendar."
+          "description": "The calendar to import from."
         }
       }
     }

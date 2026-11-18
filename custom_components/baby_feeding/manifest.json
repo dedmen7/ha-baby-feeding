@@ -1,6 +1,6 @@
 {
   "domain": "baby_feeding",
-  "name": "Babyvoeding",
+  "name": "Baby Feeding",
   "after_dependencies": [
     "frontend",
     "notify",
@@ -19,5 +19,5 @@
   "issue_tracker": "https://github.com/dedmen7/ha-baby-feeding/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.1.0"
+  "version": "0.2.0"
 }

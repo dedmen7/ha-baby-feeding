@@ -1,4 +1,4 @@
-"""Baby feeding: bottle diary, feeding rhythm, reminders and the dashboard card."""
+"""Baby Feeding: bottle diary, feeding rhythm, reminders and the dashboard card."""
 
 from collections.abc import Awaitable, Callable
 from pathlib import Path
@@ -59,7 +59,7 @@ def _register_services(hass: HomeAssistant) -> None:
     def manager() -> FeedingManager:
         entries = hass.config_entries.async_loaded_entries(DOMAIN)
         if not entries:
-            raise ServiceValidationError('Babyvoeding is niet geladen.')
+            raise ServiceValidationError('Baby Feeding is not loaded.', translation_domain=DOMAIN, translation_key='not_loaded')
         return entries[0].runtime_data
 
     def register(name: str, schema: vol.Schema, run: Callable[[FeedingManager, dict[str, Any]], Awaitable[Any]]) -> None:
@@ -67,7 +67,7 @@ def _register_services(hass: HomeAssistant) -> None:
             try:
                 result = await run(manager(), dict(call.data))
             except FeedError as error:
-                raise ServiceValidationError(str(error)) from error
+                raise ServiceValidationError(str(error), translation_domain=DOMAIN, translation_key=error.key) from error
             return result if isinstance(result, dict) else _summary(result)
 
         hass.services.async_register(domain=DOMAIN, service=name, service_func=handle, schema=schema, supports_response=SupportsResponse.OPTIONAL)

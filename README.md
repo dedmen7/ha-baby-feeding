@@ -1,4 +1,4 @@
-# Babyvoeding for Home Assistant
+# Baby Feeding for Home Assistant
 
 [![Validate](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/validate.yml/badge.svg)](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/validate.yml)
 [![Tests](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/tests.yml/badge.svg)](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/tests.yml)
@@ -6,7 +6,7 @@
 
 A Home Assistant integration for bottle feeding. It keeps a diary of the bottles you give, reminds both parents when the next bottle is due, and shows the countdown on a dashboard card, in phone widgets and on the iPhone lock screen.
 
-> **Status:** early and opinionated. The texts are Dutch and the rhythm is the one this was built for: three hours by day, a configurable night interval for bottles started between 22:30 and 07:00. Amounts are in cc (ml). Translations and configurable times are welcome as contributions.
+> **Status:** early and opinionated. The rhythm is the one this was built for: three hours by day and a configurable night interval for bottles started between 22:30 and 07:00. The interface is English with a Dutch translation; amounts are in ml (shown as cc in Dutch). More translations and configurable times are welcome as contributions.
 
 ## Features
 
@@ -14,7 +14,7 @@ A Home Assistant integration for bottle feeding. It keeps a diary of the bottles
 - **One reminder per planned moment** – a critical notification on the phones you choose. Changing the settings never repeats a reminder for a moment that has already alerted.
 - **Bottles ahead** – a bottle can be saved up to 24 hours in advance; the next reminder then counts from that bottle.
 - **Diary** – add earlier feeds, change or delete feeds, and see daily and weekly totals. The diary is stored by the integration and is also shown as a read-only calendar.
-- **Widgets** – `sensor.volgende_fles` (for example `14:30`, `Nu` or `Niet gepland`) and `sensor.voeding_voortgang` (0–100 % in steps of five). Phones get an `update_widgets` command after a change.
+- **Widgets** – `sensor.baby_feeding_next_bottle` (for example `14:30`, `Now` or `Not planned`, in the Home Assistant language) and `sensor.baby_feeding_progress` (0–100 % in steps of five). Phones get an `update_widgets` command after a change.
 - **Lock screen** – a silent Live Activity with a countdown to the next bottle, also in the Dynamic Island.
 - **Dashboard card** – shipped with the integration and loaded on every dashboard; there is no resource to add.
 
@@ -29,7 +29,7 @@ A Home Assistant integration for bottle feeding. It keeps a diary of the bottles
 
 1. In HACS, open **⋮ → Custom repositories**.
 2. Add `https://github.com/dedmen7/ha-baby-feeding` with type **Integration**.
-3. Install **Babyvoeding** and restart Home Assistant.
+3. Install **Baby Feeding** and restart Home Assistant.
 
 ### Manual
 
@@ -37,10 +37,10 @@ Copy `custom_components/baby_feeding` into the `custom_components` folder of you
 
 ## Configuration
 
-Go to **Settings → Devices & services → Add integration → Babyvoeding**. Choose:
+Go to **Settings → Devices & services → Add integration → Baby Feeding**. Choose:
 
 - **Phones for reminders** – the `notify.mobile_app_*` actions of the parents' phones.
-- **Dashboard path** – the view the reminder and the lock-screen countdown open, for example `/dashboard-main/voeding`.
+- **Dashboard path** – the view the reminder and the lock-screen countdown open, for example `/lovelace/baby`.
 
 Both can be changed later under **Configure**. The default amount, the agreed maximum and the night interval are set on the card's settings tab.
 
@@ -56,17 +56,19 @@ mode: main   # main, history, settings or timer
 | `main` | Countdown, the bottle form, totals and the expected bottles for the next 24 hours |
 | `history` | The diary per day, with editing |
 | `settings` | Default amount, maximum and night interval |
-| `timer` | Only the countdown, for a home view; add `navigation_path: /dashboard-main/voeding` to open the feeding view on tap |
+| `timer` | Only the countdown, for a home view; add `navigation_path: /lovelace/baby` to open the feeding view on tap |
 
 ## Entities
 
 | Entity | Content |
 |---|---|
-| `sensor.volgende_voeding` | Timestamp of the next bottle |
-| `sensor.volgende_fles` | Time of the next bottle as text, for widgets |
-| `sensor.voeding_voortgang` | Progress towards the next bottle in % |
-| `sensor.voeding_status` | Plan, open bottle, settings and last week's feeds, used by the card |
-| `calendar.voedingsdagboek` | The diary as a read-only calendar |
+| `sensor.baby_feeding_next_feeding` | Timestamp of the next bottle |
+| `sensor.baby_feeding_next_bottle` | Time of the next bottle as text, for widgets |
+| `sensor.baby_feeding_progress` | Progress towards the next bottle in % |
+| `sensor.baby_feeding_status` | `open` or `saved`, with the plan, settings and last week's feeds as attributes, used by the card |
+| `calendar.baby_feeding_diary` | The diary as a read-only calendar |
+
+Entity IDs are always English; names, texts and notifications follow the Home Assistant language (English, or Dutch).
 
 ## Actions
 
@@ -78,9 +80,13 @@ mode: main   # main, history, settings or timer
 | `baby_feeding.delete_feed` | Remove a feed (`feed_id`) |
 | `baby_feeding.new_bottle` | Open a new bottle in the card |
 | `baby_feeding.set_settings` | Default amount, maximum and night interval |
-| `baby_feeding.import_calendar` | One-time import of feeds named like `70 cc` from an existing calendar, into an empty diary |
+| `baby_feeding.import_calendar` | One-time import of feeds named like `70 ml` or `70 cc` from an existing calendar, into an empty diary |
 
-Refused changes return a clear message, for example a second feed in the same minute or a bottle more than 24 hours ahead.
+Refused changes return a translated message, for example a second feed in the same minute or a bottle more than 24 hours ahead.
+
+## Translations
+
+The card follows each user's language; the sensors, reminders and lock-screen texts follow the Home Assistant system language. English is the default and Dutch is included. Add a language by adding a table to `texts.py`, a file in `translations/` and an entry in `BABY_FEEDING_TEXT` in the card.
 
 ## Privacy
 

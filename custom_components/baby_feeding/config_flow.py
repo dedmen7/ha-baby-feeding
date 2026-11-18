@@ -37,7 +37,7 @@ class BabyFeedingConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = _valid(user_input)
             if not errors:
-                return self.async_create_entry(title='Babyvoeding', data=user_input)
+                return self.async_create_entry(title='Baby Feeding', data=user_input)
         return self.async_show_form(step_id='user', data_schema=_schema(self.hass, user_input or {}), errors=errors)
 
     @staticmethod

@@ -13,8 +13,26 @@ DEFAULT_STANDARD_AMOUNT = 20
 AHEAD_LIMIT = timedelta(hours=24)
 
 
+ERRORS = {
+    'bottle_too_far_ahead': 'Choose a start time no more than 24 hours ahead.',
+    'earlier_feed_in_future': 'An earlier feed must already have happened. Save a bottle ahead with the bottle form.',
+    'only_planned_bottle_ahead': 'Choose a time that has passed. Only the last saved bottle can be set ahead.',
+    'invalid_amount': 'Enter a whole amount between 0 and 9999.',
+    'maximum_too_low': 'Enter a maximum of at least 1 or leave it empty.',
+    'standard_above_maximum': 'The default amount is above the agreed maximum.',
+    'invalid_night_interval': 'Choose a night interval of 3 to 8 whole hours.',
+    'minute_taken': 'There is already a feed in this minute. Change that feed or choose the actual start time.',
+    'feed_not_found': 'This feed was moved or deleted. Refresh the overview.',
+    'import_needs_empty_diary': 'Importing is only possible into an empty diary.',
+}
+
+
 class FeedError(ValueError):
-    """A diary change that is refused, with a message the parents can act on."""
+    """A refused diary change; `key` is the translation key, the message is the English text."""
+
+    def __init__(self, key: str) -> None:
+        super().__init__(ERRORS[key])
+        self.key = key
 
 
 @dataclass(frozen=True)
@@ -38,7 +56,7 @@ class FeedingState:
 
 def save_bottle(state: FeedingState, *, start: datetime, amount: int, now: datetime, time_zone: ZoneInfo, new_id: Callable[[], str]) -> FeedingState:
     if start > now + AHEAD_LIMIT:
-        raise FeedError('Vul een begintijd tot uiterlijk 24 uur vooruit in.')
+        raise FeedError('bottle_too_far_ahead')
     feed = Feed(feed_id=new_id(), start=start, amount=valid_amount(amount))
     _ensure_free_minute(feeds=state.feeds, start=start, ignore_id=None)
     plan = _plan_from(plan=state.plan, feed=feed, night_rhythm=state.night_rhythm, time_zone=time_zone)
@@ -47,7 +65,7 @@ def save_bottle(state: FeedingState, *, start: datetime, amount: int, now: datet
 
 def add_earlier_feed(state: FeedingState, *, start: datetime, amount: int, now: datetime, new_id: Callable[[], str]) -> FeedingState:
     if start > now:
-        raise FeedError('Vul een verstreken begintijd in. Zet een fles vooruit via Fles invullen.')
+        raise FeedError('earlier_feed_in_future')
     feed = Feed(feed_id=new_id(), start=start, amount=valid_amount(amount))
     _ensure_free_minute(feeds=state.feeds, start=start, ignore_id=None)
     return replace(state, feeds=_sorted((*state.feeds, feed)))
@@ -58,9 +76,9 @@ def update_feed(state: FeedingState, *, feed_id: str, start: datetime, amount: i
     is_planned = state.plan is not None and state.plan.feed_id == feed_id
     moved = start != original.start
     if moved and start > now + AHEAD_LIMIT:
-        raise FeedError('Kies een tijdstip tot uiterlijk 24 uur vooruit.')
+        raise FeedError('bottle_too_far_ahead')
     if moved and start > now and not is_planned:
-        raise FeedError('Kies een tijdstip dat al voorbij is. Alleen de laatst opgeslagen fles kan vooruit staan.')
+        raise FeedError('only_planned_bottle_ahead')
     _ensure_free_minute(feeds=state.feeds, start=start, ignore_id=feed_id)
     changed = Feed(feed_id=feed_id, start=start, amount=valid_amount(amount))
     feeds = _sorted(tuple(changed if feed.feed_id == feed_id else feed for feed in state.feeds))
@@ -102,15 +120,15 @@ def set_amounts(state: FeedingState, *, standard_amount: int, maximum_amount: in
     standard = valid_amount(standard_amount)
     maximum = None if maximum_amount is None else valid_amount(maximum_amount)
     if maximum is not None and maximum < 1:
-        raise FeedError('Vul een maximum van minstens 1 cc in of laat het leeg.')
+        raise FeedError('maximum_too_low')
     if maximum is not None and standard > maximum:
-        raise FeedError('De standaardhoeveelheid ligt boven het afgesproken maximum.')
+        raise FeedError('standard_above_maximum')
     return replace(state, standard_amount=standard, maximum_amount=maximum)
 
 
 def valid_amount(amount: object) -> int:
     if not isinstance(amount, int) or isinstance(amount, bool) or not 0 <= amount <= MAXIMUM_AMOUNT:
-        raise FeedError('Vul een heel aantal cc in tussen 0 en 9999.')
+        raise FeedError('invalid_amount')
     return amount
 
 
@@ -123,14 +141,14 @@ def _plan_from(*, plan: Plan | None, feed: Feed, night_rhythm: NightRhythm, time
 def _ensure_free_minute(*, feeds: tuple[Feed, ...], start: datetime, ignore_id: str | None) -> None:
     minute = start.replace(second=0, microsecond=0)
     if any(feed.feed_id != ignore_id and feed.start.replace(second=0, microsecond=0) == minute for feed in feeds):
-        raise FeedError('Er staat al een voeding op deze minuut. Pas die voeding aan of kies de werkelijke begintijd.')
+        raise FeedError('minute_taken')
 
 
 def _find(*, feeds: tuple[Feed, ...], feed_id: str) -> Feed:
     for feed in feeds:
         if feed.feed_id == feed_id:
             return feed
-    raise FeedError('Deze voeding is verplaatst of verwijderd. Vernieuw het overzicht.')
+    raise FeedError('feed_not_found')
 
 
 def _newest(*, feeds: tuple[Feed, ...], now: datetime) -> Feed | None:

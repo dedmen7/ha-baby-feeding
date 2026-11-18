@@ -17,16 +17,20 @@ STATUS_DAYS_BACK = 7
 
 async def async_setup_entry(hass: HomeAssistant, entry: BabyFeedingConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback) -> None:
     manager = entry.runtime_data
-    async_add_entities([NextFeedingSensor(manager), NextBottleTextSensor(manager), ProgressSensor(manager), StatusSensor(manager)])
+    async_add_entities([NextFeedingSensor(manager), NextBottleSensor(manager), ProgressSensor(manager), StatusSensor(manager)])
 
 
 class FeedingSensor(SensorEntity):
-    _attr_should_poll = False
+    """Entity IDs are fixed in English so automations and widgets do not depend on the system language."""
 
-    def __init__(self, manager: FeedingManager, *, key: str, name: str, icon: str) -> None:
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
+    def __init__(self, manager: FeedingManager, *, key: str, icon: str) -> None:
         self.manager = manager
+        self.entity_id = 'sensor.baby_feeding_' + key
         self._attr_unique_id = 'baby_feeding_' + key
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_icon = icon
 
     async def async_added_to_hass(self) -> None:
@@ -37,7 +41,7 @@ class NextFeedingSensor(FeedingSensor):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, manager: FeedingManager) -> None:
-        super().__init__(manager, key='next_feeding', name='Volgende voeding', icon='mdi:baby-bottle-outline')
+        super().__init__(manager, key='next_feeding', icon='mdi:baby-bottle-outline')
 
     @property
     def native_value(self) -> datetime | None:
@@ -45,20 +49,22 @@ class NextFeedingSensor(FeedingSensor):
         return None if plan is None else plan.due
 
 
-class NextBottleTextSensor(FeedingSensor):
+class NextBottleSensor(FeedingSensor):
+    """The next bottle as short text for phone widgets, in the Home Assistant language."""
+
     def __init__(self, manager: FeedingManager) -> None:
-        super().__init__(manager, key='next_bottle_text', name='Volgende fles', icon='mdi:baby-bottle-outline')
+        super().__init__(manager, key='next_bottle', icon='mdi:baby-bottle-outline')
 
     @property
     def native_value(self) -> str:
-        return next_bottle_text(plan=self.manager.state.plan, now=dt_util.now(), time_zone=self.manager.time_zone)
+        return next_bottle_text(plan=self.manager.state.plan, now=dt_util.now(), time_zone=self.manager.time_zone, language=self.manager.language)
 
 
 class ProgressSensor(FeedingSensor):
     _attr_native_unit_of_measurement = '%'
 
     def __init__(self, manager: FeedingManager) -> None:
-        super().__init__(manager, key='progress', name='Voeding voortgang', icon='mdi:progress-clock')
+        super().__init__(manager, key='progress', icon='mdi:progress-clock')
 
     @property
     def native_value(self) -> int:
@@ -68,15 +74,17 @@ class ProgressSensor(FeedingSensor):
 class StatusSensor(FeedingSensor):
     """Everything the dashboard card needs; the large attributes stay out of the recorder."""
 
-    _unrecorded_attributes = frozenset({'plan', 'voedingen', 'open_start'})
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ['open', 'saved']
+    _unrecorded_attributes = frozenset({'plan', 'feeds', 'open_start'})
 
     def __init__(self, manager: FeedingManager) -> None:
-        super().__init__(manager, key='status', name='Voeding status', icon='mdi:notebook-outline')
+        super().__init__(manager, key='status', icon='mdi:notebook-outline')
 
     @property
     def native_value(self) -> str:
         state = self.manager.state
-        return 'open' if state.plan is None or state.pending is not None else 'opgeslagen'
+        return 'open' if state.plan is None or state.pending is not None else 'saved'
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -88,11 +96,11 @@ class StatusSensor(FeedingSensor):
                 'feed_id': plan.feed_id, 'feed_start': _local(plan.feed_start), 'due': _local(plan.due), 'alerted': plan.alerted,
             },
             'open_start': None if state.pending is None else _local(state.pending),
-            'standaard_cc': state.standard_amount,
-            'maximum_cc': state.maximum_amount,
-            'nacht_eigen': state.night_rhythm.custom_enabled,
-            'nacht_uren': state.night_rhythm.custom_hours,
-            'voedingen': [{'id': feed.feed_id, 'start': _local(feed.start), 'cc': feed.amount} for feed in state.feeds if feed.start >= since],
+            'standard_amount': state.standard_amount,
+            'maximum_amount': state.maximum_amount,
+            'night_custom_enabled': state.night_rhythm.custom_enabled,
+            'night_hours': state.night_rhythm.custom_hours,
+            'feeds': [{'id': feed.feed_id, 'start': _local(feed.start), 'amount': feed.amount} for feed in state.feeds if feed.start >= since],
         }
 
 

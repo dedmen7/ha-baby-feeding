@@ -1,4 +1,4 @@
-// The dashboard card against the integration: it reads sensor.voeding_status and writes only through baby_feeding actions.
+// The dashboard card against the integration: it reads sensor.baby_feeding_status, writes only through baby_feeding actions and follows the user's language.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {Window} from 'happy-dom';
@@ -15,27 +15,30 @@ window.eval(fs.readFileSync(new URL('../custom_components/baby_feeding/frontend/
 const Card = window.customElements.get('baby-feeding-card');
 
 const feeds = [
-  {uid: 'feed-1', summary: '60 cc', start: '2026-11-14T09:30:47+01:00'},
-  {uid: 'feed-2', summary: '70 cc', start: '2026-11-14T12:30:00+01:00'},
+  {uid: 'feed-1', summary: '60 ml', start: '2026-11-14T09:30:47+01:00'},
+  {uid: 'feed-2', summary: '70 ml', start: '2026-11-14T12:30:00+01:00'},
 ];
 let status = {
-  state: 'opgeslagen',
+  state: 'saved',
   attributes: {
     plan: {feed_id: 'feed-2', feed_start: '2026-11-14T12:30:00+01:00', due: '2026-11-14T15:30:00+01:00', alerted: false},
-    open_start: null, standaard_cc: 70, maximum_cc: null, nacht_eigen: false, nacht_uren: 4,
-    voedingen: feeds.map(feed => ({id: feed.uid, start: feed.start, cc: Number(feed.summary.split(' ')[0])})),
+    open_start: null, standard_amount: 70, maximum_amount: null, night_custom_enabled: false, night_hours: 4,
+    feeds: feeds.map(feed => ({id: feed.uid, start: feed.start, amount: Number(feed.summary.split(' ')[0])})),
   },
 };
 const calls = [];
 let subscriptions = 0;
 let reject = null;
+let language = 'en';
 const hass = () => ({
   config: {time_zone: 'Europe/Amsterdam'},
-  states: {'sensor.voeding_status': {entity_id: 'sensor.voeding_status', ...structuredClone(status)}},
+  language,
+  locale: {language},
+  states: {'sensor.baby_feeding_status': {entity_id: 'sensor.baby_feeding_status', ...structuredClone(status)}},
   connection: {subscribeEvents: async () => { subscriptions++; return () => {}; }},
   callApi: async () => feeds.map(feed => ({uid: feed.uid, summary: feed.summary, start: {dateTime: feed.start}, end: {dateTime: feed.start}})),
   callWS: async request => {
-    if (request.type === 'get_states') return [{entity_id: 'sensor.voeding_status', ...structuredClone(status)}];
+    if (request.type === 'get_states') return [{entity_id: 'sensor.baby_feeding_status', ...structuredClone(status)}];
     calls.push(structuredClone(request));
     if (reject) { const error = reject; reject = null; throw error; }
     return {response: {plan_feed_id: 'feed-3', next_due: null, open_start: null}};
@@ -52,11 +55,12 @@ await card._refreshAll();
 
 // The clock and the saved view come from the plan in the status sensor.
 assert.equal(card.$('countdown').textContent, '01:30:00');
-assert.equal(card.$('deadline').textContent, 'om 15:30');
-assert.equal(card.$('last-feed').textContent, 'Laatste fles 12:30');
+assert.equal(card.$('deadline').textContent, 'at 15:30');
+assert.equal(card.$('last-feed').textContent, 'Last bottle 12:30');
 assert.equal(card.$('saved').hidden, false);
-assert.match(card.$('saved-meta').textContent, /12:30 · 70 cc/);
-assert.equal(card.$('today-total').textContent, '130 cc');
+assert.match(card.$('saved-meta').textContent, /12:30 · 70 ml/);
+assert.equal(card.$('today-total').textContent, '130 ml');
+assert.equal(card.shadowRoot.querySelector('[data-i18n=next_bottle]').textContent, 'Next bottle');
 assert.equal(subscriptions, 0, 'the card must not subscribe to custom events; non-admin users are refused');
 
 // A new bottle opens through the integration and the form starts at the opened minute.
@@ -70,19 +74,19 @@ assert.equal(card.$('current-amount').value, '70');
 
 // Saving sends the entered moment and amount; a refusal from the integration is shown and not reported as saved.
 input(card, 'current-time', '14:05'); input(card, 'current-amount', 75);
-reject = Object.assign(new Error('Er staat al een voeding op deze minuut. Pas die voeding aan of kies de werkelijke begintijd.'), {code: 'service_validation_error'});
+reject = Object.assign(new Error('There is already a feed in this minute. Change that feed or choose the actual start time.'), {code: 'service_validation_error', translation_key: 'minute_taken'});
 await card._saveCurrent();
-assert.match(card.$('current-error').textContent, /al een voeding op deze minuut/);
-assert.doesNotMatch(card.$('notice').textContent, /Opgeslagen/);
+assert.match(card.$('current-error').textContent, /already a feed in this minute/);
+assert.doesNotMatch(card.$('notice').textContent, /Saved/);
 await card._saveCurrent();
 assert.deepEqual(actions().at(-1), ['baby_feeding.save_bottle', {start: '2026-11-14T13:05:00.000Z', amount: 75}]);
-assert.match(card.$('notice').textContent, /Opgeslagen · 14:05 · 75 cc/);
+assert.match(card.$('notice').textContent, /Saved · 14:05 · 75 ml/);
 
 // A bottle may be saved ahead; the preview says so first.
 status = {...status, state: 'open'};
 card.hass = hass();
 input(card, 'current-time', '14:20');
-assert.match(card.$('current-preview').textContent, /^Fles staat 20 min vooruit\. Volgende melding om 17:20/);
+assert.match(card.$('current-preview').textContent, /^Bottle is set 20 min ahead\. Next reminder at 17:20/);
 
 // Changing only the amount keeps the exact stored start, including seconds.
 const row = uid => card._mapEvents(feeds.map(feed => ({uid: feed.uid, summary: feed.summary, start: {dateTime: feed.start}, end: {dateTime: feed.start}}))).find(item => item.uid === uid);
@@ -110,19 +114,31 @@ window.document.body.append(settingsCard);
 settingsCard.hass = hass();
 input(settingsCard, 'standard-amount', 80); input(settingsCard, 'maximum-amount', 90);
 settingsCard.$('night-toggle').click(); input(settingsCard, 'night-hours', 5);
-status = {...status, attributes: {...status.attributes, standaard_cc: 80, maximum_cc: 90, nacht_eigen: true, nacht_uren: 5}};
+status = {...status, attributes: {...status.attributes, standard_amount: 80, maximum_amount: 90, night_custom_enabled: true, night_hours: 5}};
 await settingsCard._saveSettings();
 assert.deepEqual(actions().at(-1), ['baby_feeding.set_settings', {standard_amount: 80, maximum_amount: 90, night_custom_enabled: true, night_hours: 5}]);
-assert.equal(settingsCard.$('settings-status').textContent, 'Instellingen opgeslagen');
+assert.equal(settingsCard.$('settings-status').textContent, 'Settings saved');
 
 // After the reminder the clock says it is time.
 now = '2026-11-14T15:31:00+01:00';
 status = {...status, state: 'open', attributes: {...status.attributes, plan: {...status.attributes.plan, alerted: true}, open_start: '2026-11-14T15:30:00+01:00'}};
 card.hass = hass();
-assert.equal(card.$('countdown').textContent, 'Tijd voor de fles');
+assert.equal(card.$('countdown').textContent, 'Time for the bottle');
 assert.equal(card.$('current-time').value, '15:30');
+
+// A Dutch user gets the Dutch translation, including refusals reported by the integration.
+language = 'nl';
+card.hass = hass();
+assert.equal(card.$('countdown').textContent, 'Tijd voor de fles');
+assert.equal(card.$('last-feed').textContent, 'Laatste fles 12:30');
+assert.equal(card.shadowRoot.querySelector('[data-i18n=next_bottle]').textContent, 'Volgende fles');
+assert.equal(card.shadowRoot.querySelector('.nav').getAttribute('aria-label'), 'Voeding navigatie');
+assert.equal(card._message({translation_key: 'minute_taken', message: 'There is already a feed in this minute.'}), 'Er staat al een voeding op deze minuut. Pas die voeding aan of kies de werkelijke begintijd.');
+language = 'de';
+card.hass = hass();
+assert.equal(card.$('countdown').textContent, 'Time for the bottle', 'unknown languages fall back to English');
 
 assert.ok(actions().every(([name]) => name.startsWith('baby_feeding.')), 'the card only writes through the integration');
 card.remove(); settingsCard.remove();
 await window.happyDOM.cancelAsync(); await window.close();
-console.log('Card PASS: reads the status sensor and writes only through baby_feeding actions.');
+console.log('Card PASS: reads the status sensor, writes only through baby_feeding actions, English with a Dutch translation.');

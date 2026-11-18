@@ -50,13 +50,13 @@ def test_a_bottle_may_be_set_up_to_24_hours_ahead(start: str, due: str) -> None:
 
 
 def test_a_bottle_more_than_24_hours_ahead_is_refused() -> None:
-    with pytest.raises(FeedError, match='24 uur'):
+    with pytest.raises(FeedError, match='24 hours'):
         bottle(FeedingState(), start='2026-11-15T16:51', now='2026-11-14T16:50', new_id=ids())
 
 
 @pytest.mark.parametrize('amount', [-1, 10000, 2.5, '20', None, True])
 def test_only_whole_amounts_from_0_to_9999_are_accepted(amount: object) -> None:
-    with pytest.raises(FeedError, match='0 en 9999'):
+    with pytest.raises(FeedError, match='0 and 9999'):
         bottle(FeedingState(), start='2026-11-14T11:12', amount=amount, now='2026-11-14T12:38', new_id=ids())
 
 
@@ -68,14 +68,14 @@ def test_boundary_amounts_are_accepted(amount: int) -> None:
 def test_a_second_bottle_in_the_same_minute_is_refused() -> None:
     new_id = ids()
     state = bottle(FeedingState(), start='2026-11-14T11:12', now='2026-11-14T12:38', new_id=new_id)
-    with pytest.raises(FeedError, match='minuut'):
+    with pytest.raises(FeedError, match='minute'):
         add_earlier_feed(state, start=local('2026-11-14T11:12:30'), amount=30, now=local('2026-11-14T12:38'), new_id=new_id)
 
 
 def test_an_earlier_feed_must_have_passed_and_leaves_the_reminder_alone() -> None:
     new_id = ids()
     state = bottle(FeedingState(), start='2026-11-14T11:12', now='2026-11-14T15:00', new_id=new_id)
-    with pytest.raises(FeedError, match='verstreken'):
+    with pytest.raises(FeedError, match='already have happened'):
         add_earlier_feed(state, start=local('2026-11-14T15:10'), amount=30, now=local('2026-11-14T15:00'), new_id=new_id)
     later = add_earlier_feed(state, start=local('2026-11-14T12:00'), amount=20, now=local('2026-11-14T15:00'), new_id=new_id)
     assert len(later.feeds) == 2
@@ -110,12 +110,12 @@ def test_an_older_feed_cannot_move_ahead() -> None:
     new_id = ids()
     state = add_earlier_feed(FeedingState(), start=local('2026-11-14T11:00'), amount=60, now=local('2026-11-14T16:50'), new_id=new_id)
     state = bottle(state, start='2026-11-14T14:00', now='2026-11-14T16:50', new_id=new_id)
-    with pytest.raises(FeedError, match='laatst opgeslagen fles'):
+    with pytest.raises(FeedError, match='last saved bottle'):
         update_feed(state, feed_id='feed-1', start=local('2026-11-14T17:45'), amount=60, now=local('2026-11-14T16:50'), time_zone=AMSTERDAM)
 
 
 def test_an_unknown_feed_cannot_be_changed() -> None:
-    with pytest.raises(FeedError, match='verwijderd'):
+    with pytest.raises(FeedError, match='deleted'):
         update_feed(FeedingState(), feed_id='feed-9', start=local('2026-11-14T11:00'), amount=60, now=local('2026-11-14T16:50'), time_zone=AMSTERDAM)
 
 

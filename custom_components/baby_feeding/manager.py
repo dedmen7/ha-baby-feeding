@@ -21,9 +21,8 @@ from .const import (
     CONF_DASHBOARD_URL,
     CONF_NOTIFY_SERVICES,
     DEFAULT_DASHBOARD_URL,
+    DOMAIN,
     PHONE_UPDATE_DELAY_SECONDS,
-    REMINDER_MESSAGE,
-    REMINDER_TITLE,
     STORAGE_KEY,
     STORAGE_VERSION,
     WIDGET_REFRESH,
@@ -33,9 +32,10 @@ from .display import lock_screen_message, next_bottle_text
 from .persistence import from_stored, to_stored
 from .planning import plan_for_feed
 from .schedule import NightRhythm
+from .texts import text
 
 _LOGGER = logging.getLogger(__name__)
-IMPORTED_AMOUNT = re.compile(r'^\s*(\d+)\s*cc\s*$', re.IGNORECASE)
+IMPORTED_AMOUNT = re.compile(r'^\s*(\d+)\s*(cc|ml)\s*$', re.IGNORECASE)
 
 
 class FeedingManager:
@@ -63,11 +63,15 @@ class FeedingManager:
     def time_zone(self) -> ZoneInfo:
         return ZoneInfo(self.hass.config.time_zone)
 
+    @property
+    def language(self) -> str:
+        return self.hass.config.language
+
     async def async_start(self) -> None:
         stored = await self._store.async_load()
         if stored is not None:
             self.state = from_stored(stored)
-        self._sent_widget_text = next_bottle_text(plan=self.state.plan, now=dt_util.now(), time_zone=self.time_zone)
+        self._sent_widget_text = next_bottle_text(plan=self.state.plan, now=dt_util.now(), time_zone=self.time_zone, language=self.language)
         self._unsubscribers.append(async_track_time_interval(hass=self.hass, action=self._async_minute, interval=timedelta(minutes=1)))
         self._schedule_due()
         await self._async_handle_due()
@@ -112,7 +116,7 @@ class FeedingManager:
             try:
                 rhythm = NightRhythm(custom_enabled=night_custom_enabled, custom_hours=night_hours)
             except ValueError as error:
-                raise FeedError(str(error)) from error
+                raise FeedError('invalid_night_interval') from error
             with_amounts = diary.set_amounts(state, standard_amount=standard_amount, maximum_amount=maximum_amount)
             return diary.set_night_rhythm(with_amounts, night_rhythm=rhythm, now=now, time_zone=self.time_zone)
 
@@ -120,7 +124,7 @@ class FeedingManager:
 
     async def async_import_calendar(self, *, entity_id: str) -> dict[str, int]:
         if self.state.feeds:
-            raise FeedError('Importeren kan alleen in een leeg dagboek.')
+            raise FeedError('import_needs_empty_diary')
         now = dt_util.now()
         response = await self.hass.services.async_call(
             domain='calendar', service='get_events',
@@ -148,7 +152,7 @@ class FeedingManager:
             try:
                 updated = change(self.state)
             except FeedError as error:
-                raise ServiceValidationError(str(error)) from error
+                raise ServiceValidationError(str(error), translation_domain=DOMAIN, translation_key=error.key) from error
             if updated == self.state:
                 return updated
             self.state = updated
@@ -193,7 +197,7 @@ class FeedingManager:
             await self._store.async_save(to_stored(updated))
         self._notify_listeners()
         self._schedule_phone_update()
-        reminder = {'title': REMINDER_TITLE, 'message': REMINDER_MESSAGE, 'data': {'url': self.dashboard_url, 'push': {'sound': {'name': 'default', 'critical': 1, 'volume': 1.0}}}}
+        reminder = {'title': text(self.language, 'reminder_title'), 'message': text(self.language, 'reminder_message'), 'data': {'url': self.dashboard_url, 'push': {'sound': {'name': 'default', 'critical': 1, 'volume': 1.0}}}}
         await self._async_send_to_phones(reminder)
 
     @callback
@@ -212,11 +216,11 @@ class FeedingManager:
         plan = self.state.plan
         if plan is not None:
             countdown = (plan.feed_id, plan.feed_start, plan.due, plan.due <= now)
-            message = lock_screen_message(plan=plan, now=now, time_zone=self.time_zone, dashboard_url=self.dashboard_url)
+            message = lock_screen_message(plan=plan, now=now, time_zone=self.time_zone, dashboard_url=self.dashboard_url, language=self.language)
             if message is not None and countdown != self._sent_countdown:
                 self._sent_countdown = countdown
                 await self._async_send_to_phones(message)
-        widget_text = next_bottle_text(plan=plan, now=now, time_zone=self.time_zone)
+        widget_text = next_bottle_text(plan=plan, now=now, time_zone=self.time_zone, language=self.language)
         if widget_text != self._sent_widget_text:
             self._sent_widget_text = widget_text
             await self._async_send_to_phones({'message': WIDGET_REFRESH})

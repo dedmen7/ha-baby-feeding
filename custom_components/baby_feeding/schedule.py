@@ -22,7 +22,7 @@ class NightRhythm:
     def __post_init__(self) -> None:
         whole_hours = isinstance(self.custom_hours, int) and not isinstance(self.custom_hours, bool)
         if not whole_hours or not MINIMUM_NIGHT_INTERVAL_HOURS <= self.custom_hours <= MAXIMUM_NIGHT_INTERVAL_HOURS:
-            raise ValueError('Kies een nachtinterval van 3 tot en met 8 hele uren.')
+            raise ValueError('Choose a night interval of 3 to 8 whole hours.')
 
     @property
     def interval_hours(self) -> int:

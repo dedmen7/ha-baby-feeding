@@ -11,7 +11,7 @@ about: Something does not work as described
 
 **Versions**
 - Home Assistant:
-- Babyvoeding:
+- Baby Feeding:
 - Companion app and phone OS:
 
 **Log lines** (Settings → System → Logs, search for `baby_feeding`)

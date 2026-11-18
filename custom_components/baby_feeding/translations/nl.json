@@ -10,7 +10,7 @@
       }
     },
     "error": {
-      "invalid_dashboard_url": "Gebruik een pad dat met één / begint, bijvoorbeeld /dashboard-main/voeding.",
+      "invalid_dashboard_url": "Gebruik een pad dat met één / begint, bijvoorbeeld /lovelace/0.",
       "invalid_notify_service": "Kies meldingsacties die met notify. beginnen."
     },
     "abort": {
@@ -28,8 +28,68 @@
       }
     },
     "error": {
-      "invalid_dashboard_url": "Gebruik een pad dat met één / begint, bijvoorbeeld /dashboard-main/voeding.",
+      "invalid_dashboard_url": "Gebruik een pad dat met één / begint, bijvoorbeeld /lovelace/0.",
       "invalid_notify_service": "Kies meldingsacties die met notify. beginnen."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_feeding": {
+        "name": "Volgende voeding"
+      },
+      "next_bottle": {
+        "name": "Volgende fles"
+      },
+      "progress": {
+        "name": "Voortgang voeding"
+      },
+      "status": {
+        "name": "Voedingsstatus",
+        "state": {
+          "open": "Fles open",
+          "saved": "Opgeslagen"
+        }
+      }
+    },
+    "calendar": {
+      "diary": {
+        "name": "Voedingsdagboek"
+      }
+    }
+  },
+  "exceptions": {
+    "bottle_too_far_ahead": {
+      "message": "Kies een begintijd tot uiterlijk 24 uur vooruit."
+    },
+    "earlier_feed_in_future": {
+      "message": "Een eerdere voeding moet al voorbij zijn. Zet een fles vooruit via Fles invullen."
+    },
+    "only_planned_bottle_ahead": {
+      "message": "Kies een tijdstip dat al voorbij is. Alleen de laatst opgeslagen fles kan vooruit staan."
+    },
+    "invalid_amount": {
+      "message": "Vul een heel aantal cc in tussen 0 en 9999."
+    },
+    "maximum_too_low": {
+      "message": "Vul een maximum van minstens 1 cc in of laat het leeg."
+    },
+    "standard_above_maximum": {
+      "message": "De standaardhoeveelheid ligt boven het afgesproken maximum."
+    },
+    "invalid_night_interval": {
+      "message": "Kies een nachtinterval van 3 tot en met 8 hele uren."
+    },
+    "minute_taken": {
+      "message": "Er staat al een voeding op deze minuut. Pas die voeding aan of kies de werkelijke begintijd."
+    },
+    "feed_not_found": {
+      "message": "Deze voeding is verplaatst of verwijderd. Vernieuw het overzicht."
+    },
+    "import_needs_empty_diary": {
+      "message": "Importeren kan alleen in een leeg dagboek."
+    },
+    "not_loaded": {
+      "message": "Babyvoeding is niet geladen."
     }
   },
   "services": {
@@ -118,11 +178,11 @@
     },
     "import_calendar": {
       "name": "Kalender importeren",
-      "description": "Neemt voedingen (\"70 cc\") eenmalig over uit een bestaande kalender. Alleen in een leeg dagboek.",
+      "description": "Neemt voedingen zoals \"70 cc\" eenmalig over uit een bestaande kalender. Alleen in een leeg dagboek.",
       "fields": {
         "entity_id": {
           "name": "Kalender",
-          "description": "De oude voedingskalender."
+          "description": "De kalender om uit te importeren."
         }
       }
     }

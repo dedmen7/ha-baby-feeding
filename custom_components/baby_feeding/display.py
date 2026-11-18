@@ -5,11 +5,9 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .planning import Plan
+from .texts import text
 
-LIVE_ACTIVITY_TAG = 'voeding'
-TITLE = 'Volgende fles'
-NOT_PLANNED = 'Niet gepland'
-NOW = 'Nu'
+LIVE_ACTIVITY_TAG = 'baby_feeding'
 STYLE = {
     'notification_icon': 'mdi:baby-bottle-outline',
     'notification_icon_color': '#D88959',
@@ -19,10 +17,10 @@ STYLE = {
 }
 
 
-def next_bottle_text(*, plan: Plan | None, now: datetime, time_zone: ZoneInfo) -> str:
+def next_bottle_text(*, plan: Plan | None, now: datetime, time_zone: ZoneInfo, language: str) -> str:
     if plan is None:
-        return NOT_PLANNED
-    return _clock(moment=plan.due, time_zone=time_zone) if plan.due > now else NOW
+        return text(language, 'not_planned')
+    return _clock(moment=plan.due, time_zone=time_zone) if plan.due > now else text(language, 'now')
 
 
 def progress_percent(*, plan: Plan | None, now: datetime) -> int:
@@ -34,22 +32,23 @@ def progress_percent(*, plan: Plan | None, now: datetime) -> int:
     return max(0, min(100, int(elapsed * 20 // span) * 5))
 
 
-def lock_screen_message(*, plan: Plan | None, now: datetime, time_zone: ZoneInfo, dashboard_url: str) -> dict[str, Any] | None:
+def lock_screen_message(*, plan: Plan | None, now: datetime, time_zone: ZoneInfo, dashboard_url: str, language: str) -> dict[str, Any] | None:
     if plan is None:
         return None
+    title = text(language, 'next_bottle')
     base = {'tag': LIVE_ACTIVITY_TAG, 'live_update': True, 'silent': True}
     style = {**STYLE, 'url': dashboard_url}
     if plan.due <= now:
-        data = {**base, 'progress': 1, 'progress_max': 1, 'critical_text': NOW, **style}
-        return {'title': TITLE, 'message': 'Tijd voor de fles', 'data': data}
+        data = {**base, 'progress': 1, 'progress_max': 1, 'critical_text': text(language, 'now'), **style}
+        return {'title': title, 'message': text(language, 'bottle_due'), 'data': data}
     due_clock = _clock(moment=plan.due, time_zone=time_zone)
-    feed_label = 'fles om ' if plan.feed_start > now else 'laatste fles '
+    feed_key = 'bottle_ahead' if plan.feed_start > now else 'last_bottle'
+    feed = text(language, feed_key, time=_clock(moment=plan.feed_start, time_zone=time_zone))
     data = {
         **base, 'chronometer': True, 'when': int((plan.due - now).total_seconds()), 'when_relative': True,
         'critical_text': due_clock, 'progress_bar_direction': 'increasing', **style,
     }
-    message = 'om ' + due_clock + ' · ' + feed_label + _clock(moment=plan.feed_start, time_zone=time_zone)
-    return {'title': TITLE, 'message': message, 'data': data}
+    return {'title': title, 'message': text(language, 'countdown', due=due_clock, feed=feed), 'data': data}
 
 
 def _clock(*, moment: datetime, time_zone: ZoneInfo) -> str:
