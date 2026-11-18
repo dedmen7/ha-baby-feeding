@@ -7,6 +7,10 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
 
+import hashlib
+from pathlib import Path
+
+from custom_components.baby_feeding import card_module_url
 from custom_components.baby_feeding.const import DOMAIN
 
 from .conftest import DASHBOARD, PHONES, local, pushes
@@ -223,3 +227,9 @@ async def test_a_refused_change_carries_a_translation_key(hass: HomeAssistant, e
     with pytest.raises(ServiceValidationError) as refused:
         await call(hass, 'save_bottle', start='2026-11-15T12:39:00+01:00', amount=30)
     assert (refused.value.translation_domain, refused.value.translation_key) == (DOMAIN, 'bottle_too_far_ahead')
+
+
+def test_the_card_url_changes_with_the_card_content() -> None:
+    card = Path(__file__).parents[1] / 'custom_components' / 'baby_feeding' / 'frontend' / 'baby-feeding-card.js'
+    expected = hashlib.sha256(card.read_bytes()).hexdigest()[:12]
+    assert card_module_url(card) == '/baby_feeding/baby-feeding-card.js?v=' + expected

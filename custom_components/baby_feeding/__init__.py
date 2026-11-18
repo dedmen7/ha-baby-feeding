@@ -1,5 +1,6 @@
 """Baby Feeding: bottle diary, feeding rhythm, reminders and the dashboard card."""
 
+import hashlib
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
@@ -32,7 +33,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     card_url = CARD_URL_PATH + '/' + CARD_FILENAME
     await hass.http.async_register_static_paths([StaticPathConfig(url_path=card_url, path=str(CARD_FILE), cache_headers=False)])
     if 'frontend' in hass.config.components:
-        add_extra_js_url(hass=hass, url=card_url)
+        module_url = await hass.async_add_executor_job(card_module_url, CARD_FILE)
+        add_extra_js_url(hass=hass, url=module_url)
     _register_services(hass)
     return True
 
@@ -94,6 +96,12 @@ def _register_services(hass: HomeAssistant) -> None:
         ),
     )
     register('import_calendar', vol.Schema({vol.Required('entity_id'): cv.entity_id}), lambda target, data: target.async_import_calendar(entity_id=data['entity_id']))
+
+
+def card_module_url(card_file: Path) -> str:
+    """The card URL with a content hash, so browsers and the phone apps load a new card after every update."""
+    version = hashlib.sha256(card_file.read_bytes()).hexdigest()[:12]
+    return CARD_URL_PATH + '/' + CARD_FILENAME + '?v=' + version
 
 
 def _summary(state: FeedingState) -> dict[str, Any]:

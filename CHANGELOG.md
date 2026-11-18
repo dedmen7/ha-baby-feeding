@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- The card URL carries a content hash, so browsers and the phone apps load the new card right after an update instead of a cached one.
+
 ## 0.2.0
 
 - **Breaking:** entity IDs are English and fixed: `sensor.baby_feeding_next_feeding`, `sensor.baby_feeding_next_bottle`, `sensor.baby_feeding_progress`, `sensor.baby_feeding_status` and `calendar.baby_feeding_diary`. The status attributes are English too (`standard_amount`, `feeds`, …) and the status state is `open` or `saved`.
