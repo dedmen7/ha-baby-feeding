@@ -1,61 +1,105 @@
-# Babyvoeding
+# Babyvoeding for Home Assistant
 
-Een Home Assistant-integratie voor flesvoeding: een dagboek van gegeven flessen, een herinnering op het juiste moment, sensoren voor widgets, een aftelklok op het iPhone-vergrendelscherm en een dashboardkaart.
+[![Validate](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/validate.yml/badge.svg)](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/validate.yml)
+[![Tests](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/tests.yml/badge.svg)](https://github.com/dedmen7/ha-baby-feeding/actions/workflows/tests.yml)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
 
-## Wat het doet
+A Home Assistant integration for bottle feeding. It keeps a diary of the bottles you give, reminds both parents when the next bottle is due, and shows the countdown on a dashboard card, in phone widgets and on the iPhone lock screen.
 
-- **Ritme:** overdag drie uur tussen flessen. Een fles die tussen 22:30 en 07:00 begint krijgt het nachtinterval: standaard vier uur, of een eigen interval van drie tot acht uur. Gerekend in verstreken uren, ook bij zomer- en wintertijd.
-- **Herinnering:** op het geplande moment een kritieke melding op de ingestelde telefoons, één keer per gepland moment.
-- **Vooruit:** een fles mag tot 24 uur vooruit worden opgeslagen; de herinnering telt dan vanaf die fles.
-- **Widgets:** `sensor.volgende_fles` (bijvoorbeeld `14:30`, `Nu` of `Niet gepland`) en `sensor.voeding_voortgang` (0 tot 100 % in stappen van vijf). Na een wijziging krijgen de telefoons de opdracht `update_widgets`.
-- **Vergrendelscherm:** een stille Live Activity met een aftelklok tot de volgende fles.
-- **Kaart:** de integratie levert de kaart `custom:baby-feeding-card` mee en laadt hem op alle dashboards; een dashboardbron toevoegen is niet nodig.
+> **Status:** early and opinionated. The texts are Dutch and the rhythm is the one this was built for: three hours by day, a configurable night interval for bottles started between 22:30 and 07:00. Amounts are in cc (ml). Translations and configurable times are welcome as contributions.
 
-## Installeren
+## Features
 
-1. Voeg in HACS via **⋮ → Aangepaste repository's** deze repository toe als type **Integration**. HACS werkt alleen met openbare GitHub-repository's.
-2. Installeer **Babyvoeding** en herstart Home Assistant.
-3. Voeg via **Instellingen → Apparaten en diensten → Integratie toevoegen** de integratie **Babyvoeding** toe. Kies de telefoons die herinneringen krijgen en het dashboardpad dat de melding opent.
+- **Feeding rhythm** – three hours between bottles by day; bottles started between 22:30 and 07:00 use the night interval (four hours by default, or your own choice of three to eight). Intervals are elapsed hours, so daylight-saving changes are handled correctly.
+- **One reminder per planned moment** – a critical notification on the phones you choose. Changing the settings never repeats a reminder for a moment that has already alerted.
+- **Bottles ahead** – a bottle can be saved up to 24 hours in advance; the next reminder then counts from that bottle.
+- **Diary** – add earlier feeds, change or delete feeds, and see daily and weekly totals. The diary is stored by the integration and is also shown as a read-only calendar.
+- **Widgets** – `sensor.volgende_fles` (for example `14:30`, `Nu` or `Niet gepland`) and `sensor.voeding_voortgang` (0–100 % in steps of five). Phones get an `update_widgets` command after a change.
+- **Lock screen** – a silent Live Activity with a countdown to the next bottle, also in the Dynamic Island.
+- **Dashboard card** – shipped with the integration and loaded on every dashboard; there is no resource to add.
 
-Vereist Home Assistant 2026.7.0 of later. Sta op elke iPhone bij Instellingen → Home Assistant **Kritieke meldingen** en **Live-activiteiten** toe.
+## Requirements
 
-## Dashboard
+- Home Assistant 2026.7.0 or later.
+- The Home Assistant Companion app on the phones that should get reminders. For iPhones, allow **Critical Notifications** and **Live Activities** for Home Assistant in the iOS settings (iOS 17.2 or later for Live Activities).
+
+## Installation
+
+### HACS (recommended)
+
+1. In HACS, open **⋮ → Custom repositories**.
+2. Add `https://github.com/dedmen7/ha-baby-feeding` with type **Integration**.
+3. Install **Babyvoeding** and restart Home Assistant.
+
+### Manual
+
+Copy `custom_components/baby_feeding` into the `custom_components` folder of your Home Assistant configuration and restart.
+
+## Configuration
+
+Go to **Settings → Devices & services → Add integration → Babyvoeding**. Choose:
+
+- **Phones for reminders** – the `notify.mobile_app_*` actions of the parents' phones.
+- **Dashboard path** – the view the reminder and the lock-screen countdown open, for example `/dashboard-main/voeding`.
+
+Both can be changed later under **Configure**. The default amount, the agreed maximum and the night interval are set on the card's settings tab.
+
+## Dashboard card
 
 ```yaml
 type: custom:baby-feeding-card
-mode: main        # main, history, settings of timer
+mode: main   # main, history, settings or timer
 ```
 
-Met `mode: timer` toont de kaart alleen de aftelklok. Met `navigation_path: /dashboard-main/voeding` opent een tik de voedingsview.
-
-## Entiteiten
-
-| Entiteit | Inhoud |
+| Mode | Shows |
 |---|---|
-| `sensor.volgende_voeding` | Tijdstip van de volgende fles |
-| `sensor.volgende_fles` | Tijd als tekst voor widgets |
-| `sensor.voeding_voortgang` | Voortgang tot de volgende fles in % |
-| `sensor.voeding_status` | Plan, open fles, instellingen en de voedingen van de afgelopen week, voor de kaart |
-| `calendar.voedingsdagboek` | Het dagboek als kalender, alleen-lezen |
+| `main` | Countdown, the bottle form, totals and the expected bottles for the next 24 hours |
+| `history` | The diary per day, with editing |
+| `settings` | Default amount, maximum and night interval |
+| `timer` | Only the countdown, for a home view; add `navigation_path: /dashboard-main/voeding` to open the feeding view on tap |
 
-## Acties
+## Entities
 
-`baby_feeding.save_bottle`, `add_earlier_feed`, `update_feed`, `delete_feed`, `new_bottle`, `set_settings` en `import_calendar`. Een geweigerde wijziging geeft een melding met de reden, bijvoorbeeld een tweede voeding op dezelfde minuut of een tijd meer dan 24 uur vooruit.
+| Entity | Content |
+|---|---|
+| `sensor.volgende_voeding` | Timestamp of the next bottle |
+| `sensor.volgende_fles` | Time of the next bottle as text, for widgets |
+| `sensor.voeding_voortgang` | Progress towards the next bottle in % |
+| `sensor.voeding_status` | Plan, open bottle, settings and last week's feeds, used by the card |
+| `calendar.voedingsdagboek` | The diary as a read-only calendar |
 
-## Overstappen vanaf het YAML-package
+## Actions
 
-1. Maak een back-up van `/config/packages/baby_voeding.yaml`, `/config/www/voeding/` en het dashboard.
-2. Verwijder het package en de dashboardbron `/local/voeding/baby-feeding-card.js`, en herstart.
-3. Installeer en stel de integratie in zoals hierboven.
-4. Neem het dagboek over met de actie `baby_feeding.import_calendar` en de oude kalender als `entity_id`. Dit kan alleen in een leeg dagboek. Een gepland moment dat al voorbij is, meldt niet opnieuw.
-5. Controleer het dagboek en de volgende fles, en verwijder daarna de oude Local calendar. Zolang die bestaat, heet de nieuwe kalender `calendar.voedingsdagboek_2`; hernoem hem daarna naar `calendar.voedingsdagboek`.
+| Action | Purpose |
+|---|---|
+| `baby_feeding.save_bottle` | Save a bottle (`start`, `amount`); the next reminder counts from it. Up to 24 hours ahead. |
+| `baby_feeding.add_earlier_feed` | Add a past feed without moving the reminder |
+| `baby_feeding.update_feed` | Change the time or amount of a feed (`feed_id`, `start`, `amount`) |
+| `baby_feeding.delete_feed` | Remove a feed (`feed_id`) |
+| `baby_feeding.new_bottle` | Open a new bottle in the card |
+| `baby_feeding.set_settings` | Default amount, maximum and night interval |
+| `baby_feeding.import_calendar` | One-time import of feeds named like `70 cc` from an existing calendar, into an empty diary |
 
-## Ontwikkelen
+Refused changes return a clear message, for example a second feed in the same minute or a bottle more than 24 hours ahead.
+
+## Privacy
+
+Everything stays in your Home Assistant. The diary is stored in `.storage/baby_feeding`; notifications go only to the phones you select. The large card attributes are excluded from the recorder.
+
+## Development
 
 ```bash
+python -m pip install pytest-homeassistant-custom-component
 python -m pytest
 ```
 
 ```bash
-npm install && npm run test:card
+npm install
+npm run test:card
 ```
+
+The feeding rules live in plain Python (`schedule.py`, `planning.py`, `diary.py`, `display.py`) and are tested without Home Assistant; `test_integration.py` covers the integration in a running Home Assistant. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE)
