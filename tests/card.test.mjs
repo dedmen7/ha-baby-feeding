@@ -30,9 +30,11 @@ const calls = [];
 let subscriptions = 0;
 let reject = null;
 let language = 'en';
+let selectedLanguage = null;
 const hass = () => ({
   config: {time_zone: 'Europe/Amsterdam', language},
   language: 'en',
+  selectedLanguage,
   locale: {language: 'en'},
   states: {'sensor.baby_feeding_status': {entity_id: 'sensor.baby_feeding_status', ...structuredClone(status)}},
   connection: {subscribeEvents: async () => { subscriptions++; return () => {}; }},
@@ -144,6 +146,18 @@ assert.equal(card.$('last-feed').textContent, 'Laatste fles 12:30');
 assert.equal(card.shadowRoot.querySelector('[data-i18n=next_bottle]').textContent, 'Volgende fles');
 assert.equal(card.shadowRoot.querySelector('.nav').getAttribute('aria-label'), 'Voeding navigatie');
 assert.equal(card._message({translation_key: 'minute_taken', message: 'There is already a feed in this minute.'}), 'Er staat al een voeding op deze minuut. Pas die voeding aan of kies de werkelijke begintijd.');
+// A user who chose a language in their profile gets that language, also on a Home Assistant set to another one.
+selectedLanguage = 'en';
+card.hass = hass();
+assert.equal(card.$('countdown').textContent, 'Time for the bottle');
+selectedLanguage = null;
+card.hass = hass();
+assert.equal(card.$('countdown').textContent, 'Tijd voor de fles');
+language = 'en';
+selectedLanguage = 'nl';
+card.hass = hass();
+assert.equal(card.$('countdown').textContent, 'Tijd voor de fles');
+selectedLanguage = null;
 language = 'de';
 card.hass = hass();
 assert.equal(card.$('countdown').textContent, 'Time for the bottle', 'unknown languages fall back to English');

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- The card follows the language each user picked in their profile, so one parent can use it in English and the other in Dutch. Without a choice it follows the Home Assistant system language, as before.
+
 ## 0.3.0
 
 - The start of the night is configurable (default 22:30, earliest 18:00) in the card settings and in `baby_feeding.set_settings` (`night_starts_at`). A bottle started at or after that time gets the night interval.

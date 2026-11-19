@@ -86,7 +86,7 @@ Refused changes return a translated message, for example a second feed in the sa
 
 ## Translations
 
-The card, the sensors, reminders and lock-screen texts all follow the Home Assistant system language. English is the default and Dutch is included. Add a language by adding a table to `texts.py`, a file in `translations/` and an entry in `BABY_FEEDING_TEXT` in the card.
+The card follows the language each user picked in their profile, and the Home Assistant system language when they picked none. The sensors, reminders and lock-screen texts follow the system language. English is the default and Dutch is included. Add a language by adding a table to `texts.py`, a file in `translations/` and an entry in `BABY_FEEDING_TEXT` in the card.
 
 ## Privacy
 
